@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+input[type="range"] {
+  @apply appearance-none w-full h-2 rounded-full bg-slate-700 outline-none cursor-pointer;
+  background: transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  @apply h-2 rounded-full bg-slate-700;
+}
+input[type="range"]::-webkit-slider-thumb {
+  @apply appearance-none w-5 h-5 rounded-full cursor-pointer shadow-lg border-2 border-slate-900;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  margin-top: -6px;
+}
+input[type="range"]::-moz-range-track {
+  @apply h-2 rounded-full bg-slate-700;
+}
+input[type="range"]::-moz-range-thumb {
+  @apply w-5 h-5 rounded-full cursor-pointer border-2 border-slate-900;
+  background: linear-gradient(135deg, #34d399, #10b981);
+}

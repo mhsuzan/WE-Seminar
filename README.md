@@ -1,5 +1,7 @@
 # Green AI Trade-off Dashboard
 
+Project by **Nishat Ahmed Samrin**. Live at https://seminar.codinzy.com
+
 An interactive dashboard that visualizes the environmental trade-offs of AI system architecture decisions — model size, compute hardware, and grid carbon intensity.
 
 I built this because I kept seeing people treat AI energy consumption as a fixed cost. It's not. The same model can emit 50x more CO₂ depending on where and how you run it. This dashboard makes those knobs tangible.
@@ -12,9 +14,19 @@ You get three sliders:
 - **Compute Hardware** — Apple Neural Engine all the way up to a TPU v5 pod
 - **Grid Carbon Intensity** — from hydropower to coal
 
+Plus a **Daily usage** slider (1–24 h/day) and one-click country grids (Norway, France, UK, USA, Germany, Bangladesh, China, India…).
+
 As you tweak them, the dashboard recalculates accuracy, energy draw, CO₂, cost, and an efficiency score in real time. There's also a little tip box that tries to give you something useful based on where the knobs are at.
 
 It's not a simulator of any *specific* model — it's more of a generalized model to get the shape of the trade-offs right. The accuracy curve follows a sigmoid (diminishing returns past ~80% complexity), energy scales linearly with a hardware multiplier, and CO₂ is just energy × grid intensity.
+
+## More views
+
+- **Diminishing returns** — accuracy vs energy across the whole complexity range; click the chart to jump to a complexity.
+- **Hardware comparison** — CO₂ for the current model on every chip; click a bar to switch hardware.
+- **Yearly footprint** — annual energy, CO₂, cost and the number of trees needed to offset it, based on daily usage.
+- **Compare scenarios** — pin up to 4 configurations (saved in the browser); they show on the trade-off chart and in a side-by-side table with the best value per row highlighted.
+- **How the model works** — the formulas behind every number.
 
 ## Presets
 
@@ -29,7 +41,7 @@ There are a few presets if you want a quick starting point:
 
 ## URL sharing
 
-The dashboard syncs all three parameters to the URL query string (?c=30&h=cpu&g=0.5) so you can share a specific configuration just by sending someone a link. Browser back/forward also works.
+The dashboard syncs all parameters to the URL query string (?c=30&h=cpu&g=0.50&u=8) so you can share a specific configuration just by sending someone a link. Browser back/forward also works.
 
 ## Running locally
 

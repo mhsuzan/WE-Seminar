@@ -7,21 +7,38 @@ body {
 }
 
 input[type="range"] {
-  @apply appearance-none w-full h-2 rounded-full bg-slate-700 outline-none cursor-pointer;
+  @apply appearance-none w-full h-5 outline-none cursor-pointer block;
   background: transparent;
 }
 input[type="range"]::-webkit-slider-runnable-track {
-  @apply h-2 rounded-full bg-slate-700;
+  @apply h-2 rounded-full;
+  background: transparent;
 }
 input[type="range"]::-webkit-slider-thumb {
-  @apply appearance-none w-5 h-5 rounded-full cursor-pointer shadow-lg border-2 border-slate-900;
-  background: linear-gradient(135deg, #34d399, #10b981);
+  @apply appearance-none w-5 h-5 rounded-full cursor-pointer border-2 border-slate-950;
+  background: linear-gradient(135deg, #6ee7b7, #10b981);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.15);
   margin-top: -6px;
+  transition: box-shadow 150ms;
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.35);
 }
 input[type="range"]::-moz-range-track {
-  @apply h-2 rounded-full bg-slate-700;
+  @apply h-2 rounded-full;
+  background: transparent;
 }
 input[type="range"]::-moz-range-thumb {
-  @apply w-5 h-5 rounded-full cursor-pointer border-2 border-slate-900;
-  background: linear-gradient(135deg, #34d399, #10b981);
+  @apply w-5 h-5 rounded-full cursor-pointer border-2 border-slate-950;
+  background: linear-gradient(135deg, #6ee7b7, #10b981);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.15);
+}
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.35);
+}
+
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-wrapper *:focus {
+  outline: none;
 }

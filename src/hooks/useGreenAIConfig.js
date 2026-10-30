@@ -1,17 +1,21 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { calcEverything, HARDWARE_OPTIONS } from '../utils/calculations'
+import { calcEverything, hardwareInfo, HARDWARE_OPTIONS, GRID_MIN, GRID_MAX } from '../utils/calculations'
+
+const DEFAULTS = { complexity: 30, hardware: 'cpu', gridIntensity: 0.5, hoursPerDay: 8 }
 
 function readParams() {
-  if (typeof window === 'undefined') return {}
+  if (typeof window === 'undefined') return DEFAULTS
   const p = new URLSearchParams(window.location.search)
+  const h = p.get('h')
+  const g = parseFloat(p.get('g'))
+  const u = parseInt(p.get('u'))
   return {
-    complexity: Math.min(100, Math.max(1, parseInt(p.get('c')) || 30)),
-    hardware: p.get('h') || 'cpu',
-    gridIntensity: Math.min(1, Math.max(0.1, parseFloat(p.get('g')) || 0.5)),
+    complexity: Math.min(100, Math.max(1, parseInt(p.get('c')) || DEFAULTS.complexity)),
+    hardware: HARDWARE_OPTIONS.some(o => o.value === h) ? h : DEFAULTS.hardware,
+    gridIntensity: Number.isFinite(g) ? Math.min(GRID_MAX, Math.max(GRID_MIN, g)) : DEFAULTS.gridIntensity,
+    hoursPerDay: Number.isFinite(u) ? Math.min(24, Math.max(1, u)) : DEFAULTS.hoursPerDay,
   }
 }
-
-const DEFAULTS = { complexity: 30, hardware: 'cpu', gridIntensity: 0.5 }
 
 export const PRESETS = [
   { label: 'Edge AI', icon: '\u{1F331}', complexity: 8, hardware: 'ane', gridIntensity: 0.2, desc: 'On-device inference' },
@@ -21,12 +25,14 @@ export const PRESETS = [
 ]
 
 export default function useGreenAIConfig() {
-  const [complexity, setComplexity] = useState(() => readParams().complexity)
-  const [hardware, setHardware] = useState(() => readParams().hardware)
-  const [gridIntensity, setGridIntensity] = useState(() => readParams().gridIntensity)
+  const initial = useMemo(readParams, [])
+  const [complexity, setComplexity] = useState(initial.complexity)
+  const [hardware, setHardware] = useState(initial.hardware)
+  const [gridIntensity, setGridIntensity] = useState(initial.gridIntensity)
+  const [hoursPerDay, setHoursPerDay] = useState(initial.hoursPerDay)
   const syncing = useRef(false)
 
-  const hardwareFactor = HARDWARE_OPTIONS.find(h => h.value === hardware).factor
+  const hardwareFactor = hardwareInfo(hardware).factor
 
   const metrics = useMemo(
     () => calcEverything(complexity, hardwareFactor, gridIntensity, hardware),
@@ -43,6 +49,7 @@ export default function useGreenAIConfig() {
     setComplexity(DEFAULTS.complexity)
     setHardware(DEFAULTS.hardware)
     setGridIntensity(DEFAULTS.gridIntensity)
+    setHoursPerDay(DEFAULTS.hoursPerDay)
   }, [])
 
   useEffect(() => {
@@ -51,12 +58,13 @@ export default function useGreenAIConfig() {
     p.set('c', complexity)
     p.set('h', hardware)
     p.set('g', gridIntensity.toFixed(2))
+    p.set('u', hoursPerDay)
     const qs = p.toString()
     const cur = window.location.search.replace('?', '')
     if (cur !== qs) {
       window.history.replaceState(null, '', `?${qs}`)
     }
-  }, [complexity, hardware, gridIntensity])
+  }, [complexity, hardware, gridIntensity, hoursPerDay])
 
   useEffect(() => {
     function onPop() {
@@ -65,6 +73,7 @@ export default function useGreenAIConfig() {
       setComplexity(p.complexity)
       setHardware(p.hardware)
       setGridIntensity(p.gridIntensity)
+      setHoursPerDay(p.hoursPerDay)
       syncing.current = false
     }
     window.addEventListener('popstate', onPop)
@@ -75,6 +84,7 @@ export default function useGreenAIConfig() {
     complexity, setComplexity,
     hardware, setHardware,
     gridIntensity, setGridIntensity,
+    hoursPerDay, setHoursPerDay,
     hardwareFactor, applyPreset, reset,
     ...metrics,
   }

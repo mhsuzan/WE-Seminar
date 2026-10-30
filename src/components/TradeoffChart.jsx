@@ -1,88 +1,96 @@
-import { useMemo } from 'react'
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Cell, ResponsiveContainer, ReferenceArea, ReferenceLine, Label } from 'recharts'
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, Label, LabelList } from 'recharts'
 
 const QUADRANTS = [
-  { x1: 0, x2: 50, y1: 50, y2: 100, fill: '#f87171', opacity: 0.15, label: 'High Acc\nLow Eff' },
-  { x1: 50, x2: 100, y1: 50, y2: 100, fill: '#4ade80', opacity: 0.15, label: 'High Acc\nHigh Eff' },
-  { x1: 0, x2: 50, y1: 0, y2: 50, fill: '#fb923c', opacity: 0.15, label: 'Low Acc\nLow Eff' },
-  { x1: 50, x2: 100, y1: 0, y2: 50, fill: '#fbbf24', opacity: 0.15, label: 'Low Acc\nHigh Eff' },
+  { x1: 0, x2: 50, y1: 50, y2: 100, fill: '#f87171', label: 'Accurate but power-hungry' },
+  { x1: 50, x2: 100, y1: 50, y2: 100, fill: '#4ade80', label: 'Sweet spot' },
+  { x1: 0, x2: 50, y1: 0, y2: 50, fill: '#fb923c', label: 'Worst of both' },
+  { x1: 50, x2: 100, y1: 0, y2: 50, fill: '#fbbf24', label: 'Lean but less accurate' },
 ]
+
+export const PIN_COLORS = ['#a78bfa', '#f472b6', '#38bdf8', '#fbbf24']
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs shadow-xl">
-      <p className="text-emerald-300 font-medium">Accuracy: {d.accuracy}%</p>
-      <p className="text-cyan-300">Efficiency: {d.efficiency}/100</p>
+    <div className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs shadow-xl">
+      <p className="text-slate-200 font-semibold mb-0.5">{d.name}</p>
+      <p className="text-emerald-300">Accuracy: {d.accuracy}%</p>
+      <p className="text-cyan-300">Energy efficiency: {d.efficiency}/100</p>
     </div>
   )
 }
 
 function currentQuadrant(accuracy, efficiency) {
   const x = efficiency >= 50 ? 1 : 0
-  const y = accuracy >= 50 ? 1 : 0
-  return y * 2 + x
+  const y = accuracy >= 50 ? 0 : 2
+  return y + x
 }
 
-export default function TradeoffChart({ accuracy, efficiency }) {
-  const data = useMemo(() => [{ accuracy, efficiency }], [accuracy, efficiency])
+export default function TradeoffChart({ accuracy, efficiency, pins = [] }) {
   const activeQ = currentQuadrant(accuracy, efficiency)
+  const current = [{ accuracy, efficiency, name: 'Current' }]
 
   return (
     <div>
-      <h2 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-violet-400" />
-        Trade-off Space
-      </h2>
-      <div className="bg-gradient-to-br from-slate-800/40 to-slate-800/20 border border-slate-700/50 rounded-xl p-2">
-        <ResponsiveContainer width="100%" height={380}>
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 30, left: 40 }}>
-            <rect x={0} y={0} width="100%" height="100%" fill="#0f172a" rx={8} />
+      <ResponsiveContainer width="100%" height={360}>
+        <ScatterChart margin={{ top: 10, right: 16, bottom: 28, left: 4 }}>
+          {QUADRANTS.map((q, i) => (
+            <ReferenceArea
+              key={i}
+              x1={q.x1} x2={q.x2} y1={q.y1} y2={q.y2}
+              fill={q.fill}
+              fillOpacity={activeQ === i ? 0.22 : 0.07}
+              stroke="none"
+            >
+              <Label
+                value={q.label}
+                position="center"
+                fill={activeQ === i ? '#e2e8f0' : '#64748b'}
+                fontSize={11}
+                fontWeight={activeQ === i ? 600 : 400}
+              />
+            </ReferenceArea>
+          ))}
 
-            {QUADRANTS.map((q, i) => (
-              <ReferenceArea
-                key={i}
-                x1={q.x1} x2={q.x2} y1={q.y1} y2={q.y2}
-                fill={q.fill}
-                fillOpacity={activeQ === i ? 0.28 : q.opacity}
-              >
-                <Label
-                  value={q.label}
-                  position="center"
-                  fill="#64748b"
-                  fontSize={10}
-                  fontWeight={activeQ === i ? 500 : 400}
-                />
-              </ReferenceArea>
-            ))}
+          <ReferenceLine x={50} stroke="#334155" strokeDasharray="4 4" />
+          <ReferenceLine y={50} stroke="#334155" strokeDasharray="4 4" />
 
-            <ReferenceLine x={50} stroke="#334155" strokeDasharray="4 4" strokeWidth={1} />
-            <ReferenceLine y={50} stroke="#334155" strokeDasharray="4 4" strokeWidth={1} />
+          <XAxis
+            type="number" dataKey="efficiency" domain={[0, 100]} name="Efficiency"
+            tick={{ fill: '#94a3b8', fontSize: 11 }}
+            axisLine={{ stroke: '#334155' }}
+            tickLine={{ stroke: '#334155' }}
+            label={{ value: 'Energy efficiency →', position: 'bottom', fill: '#94a3b8', fontSize: 11, offset: 10 }}
+          />
+          <YAxis
+            type="number" dataKey="accuracy" domain={[0, 100]} name="Accuracy"
+            tick={{ fill: '#94a3b8', fontSize: 11 }}
+            axisLine={{ stroke: '#334155' }}
+            tickLine={{ stroke: '#334155' }}
+            width={44}
+            label={{ value: 'Model accuracy →', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11, offset: 12, style: { textAnchor: 'middle' } }}
+          />
+          <ZAxis range={[110]} />
+          <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#475569' }} />
 
-            <XAxis
-              type="number" dataKey="efficiency" domain={[0, 100]}
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
-              axisLine={{ stroke: '#334155' }}
-              tickLine={{ stroke: '#334155' }}
-              label={{ value: 'Energy Efficiency', position: 'bottom', fill: '#94a3b8', fontSize: 11, offset: 10 }}
-            />
-            <YAxis
-              type="number" dataKey="accuracy" domain={[0, 100]}
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
-              axisLine={{ stroke: '#334155' }}
-              tickLine={{ stroke: '#334155' }}
-              label={{ value: 'Model Accuracy', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11, offset: 10 }}
-            />
-            <ZAxis range={[130]} />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-
-            <Scatter data={data} shape="circle" animationDuration={400} isAnimationActive>
-              <Cell fill="#4ade80" stroke="#34d399" strokeWidth={3} />
+          {pins.map((p, i) => (
+            <Scatter
+              key={p.id}
+              data={[{ accuracy: p.accuracy, efficiency: p.efficiency, name: p.name, tag: p.name.replace('Scenario ', '') }]}
+              fill={PIN_COLORS[i % PIN_COLORS.length]}
+              fillOpacity={0.35}
+              stroke={PIN_COLORS[i % PIN_COLORS.length]}
+              strokeWidth={2}
+              isAnimationActive={false}
+            >
+              <LabelList dataKey="tag" position="top" fill={PIN_COLORS[i % PIN_COLORS.length]} fontSize={11} fontWeight={600} offset={9} />
             </Scatter>
-          </ScatterChart>
-        </ResponsiveContainer>
-      </div>
+          ))}
+
+          <Scatter data={current} fill="#4ade80" stroke="#ecfdf5" strokeWidth={3} animationDuration={400} />
+        </ScatterChart>
+      </ResponsiveContainer>
     </div>
   )
 }

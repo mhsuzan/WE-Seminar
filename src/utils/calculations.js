@@ -1,17 +1,36 @@
 export const HARDWARE_OPTIONS = [
-  { label: 'Apple Neural Engine', value: 'ane', factor: 0.3, description: 'On-device AI chip' },
-  { label: 'NPU (AI Boost)', value: 'npu', factor: 0.35, description: 'Integrated laptop NPU' },
-  { label: 'Edge TPU', value: 'edge_tpu', factor: 0.5, description: 'Low power AI accelerator' },
-  { label: 'ARM CPU (M-series)', value: 'arm_cpu', factor: 0.6, description: 'Apple Silicon efficiency cores' },
-  { label: 'Standard CPU', value: 'cpu', factor: 1.0, description: 'General-purpose processor' },
-  { label: 'AWS Inferentia2', value: 'inferentia', factor: 1.8, description: 'Cloud inference chip' },
-  { label: 'Mid-range GPU', value: 'mid_gpu', factor: 2.5, description: 'Consumer RTX-class GPU' },
-  { label: 'Cloud GPU (A100)', value: 'cloud_gpu', factor: 5.0, description: 'High-throughput AI GPU' },
-  { label: 'NVIDIA H100', value: 'h100', factor: 6.5, description: 'Current-gen AI training GPU' },
-  { label: 'TPU v5p', value: 'tpu_v5', factor: 8.0, description: 'Google TPU pod' },
+  { label: 'Apple Neural Engine', short: 'ANE', value: 'ane', factor: 0.3, description: 'On-device AI chip' },
+  { label: 'NPU (AI Boost)', short: 'NPU', value: 'npu', factor: 0.35, description: 'Integrated laptop NPU' },
+  { label: 'Edge TPU', short: 'Edge TPU', value: 'edge_tpu', factor: 0.5, description: 'Low power AI accelerator' },
+  { label: 'ARM CPU (M-series)', short: 'ARM CPU', value: 'arm_cpu', factor: 0.6, description: 'Apple Silicon efficiency cores' },
+  { label: 'Standard CPU', short: 'CPU', value: 'cpu', factor: 1.0, description: 'General-purpose processor' },
+  { label: 'AWS Inferentia2', short: 'Inferentia2', value: 'inferentia', factor: 1.8, description: 'Cloud inference chip' },
+  { label: 'Mid-range GPU', short: 'Mid GPU', value: 'mid_gpu', factor: 2.5, description: 'Consumer RTX-class GPU' },
+  { label: 'Cloud GPU (A100)', short: 'A100', value: 'cloud_gpu', factor: 5.0, description: 'High-throughput AI GPU' },
+  { label: 'NVIDIA H100', short: 'H100', value: 'h100', factor: 6.5, description: 'Current-gen AI training GPU' },
+  { label: 'TPU v5p', short: 'TPU v5p', value: 'tpu_v5', factor: 8.0, description: 'Google TPU pod' },
 ]
 
-const MAX_ENERGY = 800
+export const GRID_MIN = 0.02
+export const GRID_MAX = 1.0
+
+// Approximate annual-average grid intensity (kg CO₂ per kWh). Real values shift year to year.
+export const GRID_REGIONS = [
+  { label: 'Norway', value: 0.03 },
+  { label: 'France', value: 0.06 },
+  { label: 'UK', value: 0.21 },
+  { label: 'EU avg', value: 0.25 },
+  { label: 'USA', value: 0.37 },
+  { label: 'Germany', value: 0.38 },
+  { label: 'Bangladesh', value: 0.57 },
+  { label: 'China', value: 0.58 },
+  { label: 'India', value: 0.71 },
+  { label: 'South Africa', value: 0.9 },
+]
+
+export const MAX_ENERGY = 800
+export const ELECTRICITY_PRICE = 0.40 // € per kWh
+export const TREE_KG_PER_YEAR = 21 // CO₂ absorbed by one mature tree per year
 
 const HW_COST = {
   ane: 0, npu: 0, edge_tpu: 0.10, arm_cpu: 0,
@@ -19,11 +38,15 @@ const HW_COST = {
   cloud_gpu: 2.50, h100: 3.50, tpu_v5: 4.00,
 }
 
+export function hardwareInfo(value) {
+  return HARDWARE_OPTIONS.find(h => h.value === value) || HARDWARE_OPTIONS[4]
+}
+
 const TIPS = [
   {
     check: (c, h, g) => g > 0.7,
-    text: (c, h, g, a, e, es, co2, hl) =>
-      `Your grid is coal-heavy (${g.toFixed(2)}). Scheduling in regions with hydro or solar could cut CO₂ by 80%+ without changing hardware.`,
+    text: (c, h, g) =>
+      `Your grid is coal-heavy (${g.toFixed(2)} kg/kWh). Scheduling in regions with hydro or solar could cut CO₂ by 80%+ without changing hardware.`,
   },
   {
     check: (c, h, g) => g < 0.2,
@@ -86,30 +109,39 @@ export function calcCo2(energy, gridIntensity) {
 
 export function getCo2Equivalency(co2) {
   const km = Math.round(co2 / 0.25)
-  if (km <= 0) {
-    const phones = Math.round(co2 / 0.008)
-    return { value: phones || 1, unit: 'smartphone charges' }
-  }
   if (km < 2) {
     const phones = Math.round(co2 / 0.008)
-    return { value: phones, unit: 'smartphone charges' }
+    return { value: phones || 1, unit: 'smartphone charges' }
   }
   return { value: km, unit: 'km driven (petrol car)' }
 }
 
 export function calcOperatingCost(energy, hardware) {
-  const electricity = Math.round(energy * 0.40 * 100) / 100
+  const electricity = Math.round(energy * ELECTRICITY_PRICE * 100) / 100
   const hardwareCost = HW_COST[hardware] ?? 0.08
   const total = Math.round((electricity + hardwareCost) * 100) / 100
   return { electricity, hardware: hardwareCost, total }
 }
 
 export function getTip(complexity, hardware, gridIntensity, accuracy, energy, efficiencyScore, co2) {
-  const hwLabel = HARDWARE_OPTIONS.find(h => h.value === hardware)?.label || hardware
+  const hwLabel = hardwareInfo(hardware).label
   const match = TIPS.find(t => t.check(complexity, hardware, gridIntensity, accuracy, energy, efficiencyScore, co2))
   return match
     ? match.text(complexity, hardware, gridIntensity, accuracy, energy, efficiencyScore, co2, hwLabel)
     : 'Adjust the controls to explore how model size, hardware choice, and grid mix shape environmental impact.'
+}
+
+// Yearly totals for a workload that runs `hoursPerDay` every day.
+export function calcAnnual(energy, co2, cost, hoursPerDay) {
+  const hours = hoursPerDay * 365
+  const co2Kg = co2 * hours
+  return {
+    hours,
+    energyKwh: energy * hours,
+    co2Kg,
+    cost: cost.total * hours,
+    trees: Math.ceil(co2Kg / TREE_KG_PER_YEAR),
+  }
 }
 
 export function calcEverything(complexity, hardwareFactor, gridIntensity, hardware) {
@@ -122,4 +154,8 @@ export function calcEverything(complexity, hardwareFactor, gridIntensity, hardwa
   const cost = calcOperatingCost(energy, hardware)
   const tip = getTip(complexity, hardware, gridIntensity, accuracy, energy, efficiencyScore, co2)
   return { accuracy, energy, chartEfficiency, efficiencyScore, co2, equivalency, cost, tip }
+}
+
+export function calcScenario({ complexity, hardware, gridIntensity }) {
+  return calcEverything(complexity, hardwareInfo(hardware).factor, gridIntensity, hardware)
 }

@@ -1,3 +1,4 @@
+import { useChartTheme } from '../theme'
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, Label, LabelList } from 'recharts'
 
 const QUADRANTS = [
@@ -28,12 +29,13 @@ function currentQuadrant(accuracy, efficiency) {
 }
 
 export default function TradeoffChart({ accuracy, efficiency, pins = [] }) {
+  const t = useChartTheme()
   const activeQ = currentQuadrant(accuracy, efficiency)
   const current = [{ accuracy, efficiency, name: 'Current' }]
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={360}>
+      <ResponsiveContainer width="100%" height={t.fs(360)}>
         <ScatterChart margin={{ top: 10, right: 16, bottom: 28, left: 4 }}>
           {QUADRANTS.map((q, i) => (
             <ReferenceArea
@@ -46,33 +48,33 @@ export default function TradeoffChart({ accuracy, efficiency, pins = [] }) {
               <Label
                 value={q.label}
                 position="center"
-                fill={activeQ === i ? '#e2e8f0' : '#64748b'}
-                fontSize={11}
+                fill={activeQ === i ? t.labelActive : t.label}
+                fontSize={t.fs(11)}
                 fontWeight={activeQ === i ? 600 : 400}
               />
             </ReferenceArea>
           ))}
 
-          <ReferenceLine x={50} stroke="#334155" strokeDasharray="4 4" />
-          <ReferenceLine y={50} stroke="#334155" strokeDasharray="4 4" />
+          <ReferenceLine x={50} stroke={t.axis} strokeDasharray="4 4" />
+          <ReferenceLine y={50} stroke={t.axis} strokeDasharray="4 4" />
 
           <XAxis
             type="number" dataKey="efficiency" domain={[0, 100]} name="Efficiency"
-            tick={{ fill: '#94a3b8', fontSize: 11 }}
-            axisLine={{ stroke: '#334155' }}
-            tickLine={{ stroke: '#334155' }}
-            label={{ value: 'Energy efficiency →', position: 'bottom', fill: '#94a3b8', fontSize: 11, offset: 10 }}
+            tick={{ fill: t.tick, fontSize: t.fs(11) }}
+            axisLine={{ stroke: t.axis }}
+            tickLine={{ stroke: t.axis }}
+            label={{ value: 'Energy efficiency →', position: 'bottom', fill: t.tick, fontSize: t.fs(11), offset: 10 }}
           />
           <YAxis
             type="number" dataKey="accuracy" domain={[0, 100]} name="Accuracy"
-            tick={{ fill: '#94a3b8', fontSize: 11 }}
-            axisLine={{ stroke: '#334155' }}
-            tickLine={{ stroke: '#334155' }}
+            tick={{ fill: t.tick, fontSize: t.fs(11) }}
+            axisLine={{ stroke: t.axis }}
+            tickLine={{ stroke: t.axis }}
             width={44}
-            label={{ value: 'Model accuracy →', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11, offset: 12, style: { textAnchor: 'middle' } }}
+            label={{ value: 'Model accuracy →', angle: -90, position: 'insideLeft', fill: t.tick, fontSize: t.fs(11), offset: 12, style: { textAnchor: 'middle' } }}
           />
           <ZAxis range={[110]} />
-          <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#475569' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: t.cursor }} />
 
           {pins.map((p, i) => (
             <Scatter
@@ -84,11 +86,11 @@ export default function TradeoffChart({ accuracy, efficiency, pins = [] }) {
               strokeWidth={2}
               isAnimationActive={false}
             >
-              <LabelList dataKey="tag" position="top" fill={PIN_COLORS[i % PIN_COLORS.length]} fontSize={11} fontWeight={600} offset={9} />
+              <LabelList dataKey="tag" position="top" fill={PIN_COLORS[i % PIN_COLORS.length]} fontSize={t.fs(11)} fontWeight={600} offset={9} />
             </Scatter>
           ))}
 
-          <Scatter data={current} fill="#4ade80" stroke="#ecfdf5" strokeWidth={3} animationDuration={400} />
+          <Scatter data={current} fill="#4ade80" stroke={t.dotStroke} strokeWidth={3} animationDuration={400} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>

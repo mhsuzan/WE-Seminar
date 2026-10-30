@@ -1,14 +1,15 @@
+// maxComplexity: largest model the chip can serve in real time (used by the optimiser and a warning).
 export const HARDWARE_OPTIONS = [
-  { label: 'Apple Neural Engine', short: 'ANE', value: 'ane', factor: 0.3, description: 'On-device AI chip' },
-  { label: 'NPU (AI Boost)', short: 'NPU', value: 'npu', factor: 0.35, description: 'Integrated laptop NPU' },
-  { label: 'Edge TPU', short: 'Edge TPU', value: 'edge_tpu', factor: 0.5, description: 'Low power AI accelerator' },
-  { label: 'ARM CPU (M-series)', short: 'ARM CPU', value: 'arm_cpu', factor: 0.6, description: 'Apple Silicon efficiency cores' },
-  { label: 'Standard CPU', short: 'CPU', value: 'cpu', factor: 1.0, description: 'General-purpose processor' },
-  { label: 'AWS Inferentia2', short: 'Inferentia2', value: 'inferentia', factor: 1.8, description: 'Cloud inference chip' },
-  { label: 'Mid-range GPU', short: 'Mid GPU', value: 'mid_gpu', factor: 2.5, description: 'Consumer RTX-class GPU' },
-  { label: 'Cloud GPU (A100)', short: 'A100', value: 'cloud_gpu', factor: 5.0, description: 'High-throughput AI GPU' },
-  { label: 'NVIDIA H100', short: 'H100', value: 'h100', factor: 6.5, description: 'Current-gen AI training GPU' },
-  { label: 'TPU v5p', short: 'TPU v5p', value: 'tpu_v5', factor: 8.0, description: 'Google TPU pod' },
+  { label: 'Apple Neural Engine', short: 'ANE', value: 'ane', maxComplexity: 40, factor: 0.3, description: 'On-device AI chip' },
+  { label: 'NPU (AI Boost)', short: 'NPU', value: 'npu', maxComplexity: 45, factor: 0.35, description: 'Integrated laptop NPU' },
+  { label: 'Edge TPU', short: 'Edge TPU', value: 'edge_tpu', maxComplexity: 35, factor: 0.5, description: 'Low power AI accelerator' },
+  { label: 'ARM CPU (M-series)', short: 'ARM CPU', value: 'arm_cpu', maxComplexity: 60, factor: 0.6, description: 'Apple Silicon efficiency cores' },
+  { label: 'Standard CPU', short: 'CPU', value: 'cpu', maxComplexity: 70, factor: 1.0, description: 'General-purpose processor' },
+  { label: 'AWS Inferentia2', short: 'Inferentia2', value: 'inferentia', maxComplexity: 90, factor: 1.8, description: 'Cloud inference chip' },
+  { label: 'Mid-range GPU', short: 'Mid GPU', value: 'mid_gpu', maxComplexity: 85, factor: 2.5, description: 'Consumer RTX-class GPU' },
+  { label: 'Cloud GPU (A100)', short: 'A100', value: 'cloud_gpu', maxComplexity: 100, factor: 5.0, description: 'High-throughput AI GPU' },
+  { label: 'NVIDIA H100', short: 'H100', value: 'h100', maxComplexity: 100, factor: 6.5, description: 'Current-gen AI training GPU' },
+  { label: 'TPU v5p', short: 'TPU v5p', value: 'tpu_v5', maxComplexity: 100, factor: 8.0, description: 'Google TPU pod' },
 ]
 
 export const GRID_MIN = 0.02
@@ -132,9 +133,10 @@ export function getTip(complexity, hardware, gridIntensity, accuracy, energy, ef
 }
 
 // Yearly totals for a workload that runs `hoursPerDay` every day.
-export function calcAnnual(energy, co2, cost, hoursPerDay) {
+// gridFactor scales CO₂ for the time of day it runs (see windowFactor).
+export function calcAnnual(energy, co2, cost, hoursPerDay, gridFactor = 1) {
   const hours = hoursPerDay * 365
-  const co2Kg = co2 * hours
+  const co2Kg = co2 * gridFactor * hours
   return {
     hours,
     energyKwh: energy * hours,
@@ -158,4 +160,70 @@ export function calcEverything(complexity, hardwareFactor, gridIntensity, hardwa
 
 export function calcScenario({ complexity, hardware, gridIntensity }) {
   return calcEverything(complexity, hardwareInfo(hardware).factor, gridIntensity, hardware)
+}
+
+// ---- Time of day ---------------------------------------------------------
+// Illustrative daily shape of a grid with solar: cleanest around midday, dirtiest at the evening peak.
+// Multipliers average to 1, so the slider value stays the daily mean.
+export const HOURLY_PROFILE = (() => {
+  const raw = Array.from({ length: 24 }, (_, h) =>
+    1 - 0.35 * Math.exp(-((h - 13) ** 2) / 18) + 0.15 * Math.exp(-((h - 19.5) ** 2) / 8))
+  const mean = raw.reduce((a, b) => a + b, 0) / 24
+  return raw.map(r => r / mean)
+})()
+
+export function windowHours(startHour, hoursPerDay) {
+  return Array.from({ length: hoursPerDay }, (_, i) => (startHour + i) % 24)
+}
+
+export function windowFactor(startHour, hoursPerDay) {
+  const hrs = windowHours(startHour, hoursPerDay)
+  return hrs.reduce((a, h) => a + HOURLY_PROFILE[h], 0) / hrs.length
+}
+
+export function greenestStart(hoursPerDay) {
+  let best = 0
+  for (let s = 1; s < 24; s++) {
+    if (windowFactor(s, hoursPerDay) < windowFactor(best, hoursPerDay) - 1e-9) best = s
+  }
+  return best
+}
+
+// ---- Training vs usage ---------------------------------------------------
+// One-off training energy, assumed on an A100-class cluster. Complexity 100 lands near
+// GPT-3's published estimate (~1,287 MWh), so the scale is roughly right.
+export const GPT3_TRAINING_KWH = 1287000
+
+export function calcTrainingKwh(complexity) {
+  return Math.round(250 * complexity ** 1.8)
+}
+
+// ---- Everyday equivalents ------------------------------------------------
+export const EQUIVALENTS = {
+  flightKg: 1000, // one passenger, Dhaka → London, one way (approx.)
+  carKgPerKm: 0.25,
+  phoneChargeKg: 0.008,
+  homeKwhPerYear: 3600, // typical European household electricity use
+}
+
+// ---- Optimiser -----------------------------------------------------------
+// Cheapest-in-CO₂ (or cost) setup that still reaches `minAccuracy`, respecting each chip's capacity.
+export function findGreenest({ minAccuracy, grids, objective = 'co2' }) {
+  let best = null
+  for (const hw of HARDWARE_OPTIONS) {
+    let complexity = null
+    for (let c = 1; c <= hw.maxComplexity; c++) {
+      if (calcAccuracy(c) >= minAccuracy) { complexity = c; break }
+    }
+    if (complexity === null) continue
+    for (const g of grids) {
+      const cfg = { complexity, hardware: hw.value, gridIntensity: g }
+      const m = calcScenario(cfg)
+      const score = objective === 'cost' ? [m.cost.total, m.co2] : [m.co2, m.cost.total]
+      if (!best || score[0] < best.score[0] || (score[0] === best.score[0] && score[1] < best.score[1])) {
+        best = { config: cfg, metrics: m, score }
+      }
+    }
+  }
+  return best
 }

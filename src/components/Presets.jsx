@@ -24,7 +24,7 @@ export default function Presets({ current, onApply, onReset }) {
                 <span aria-hidden="true">{p.icon}</span>
                 {p.label}
               </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">{p.desc}</div>
+              <div className="text-[0.6875rem] text-slate-500 mt-0.5">{p.desc}</div>
             </button>
           )
         })}
@@ -33,7 +33,7 @@ export default function Presets({ current, onApply, onReset }) {
       <button
         type="button"
         onClick={onReset}
-        className="mt-3 text-[11px] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+        className="mt-3 text-[0.6875rem] text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
       >
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

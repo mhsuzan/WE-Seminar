@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { useChartTheme } from '../theme'
 import { HARDWARE_OPTIONS, calcEnergy, calcCo2 } from '../utils/calculations'
 
 function HwTooltip({ active, payload }) {
@@ -16,20 +17,21 @@ function HwTooltip({ active, payload }) {
 }
 
 export default function HardwareComparison({ complexity, gridIntensity, hardware, onPick }) {
+  const t = useChartTheme()
   const data = useMemo(() => HARDWARE_OPTIONS.map(h => {
     const energy = calcEnergy(complexity, h.factor)
     return { value: h.value, label: h.label, short: h.short, energy, co2: calcCo2(energy, gridIntensity) }
   }), [complexity, gridIntensity])
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={t.fs(300)}>
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
-        <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={{ stroke: '#334155' }} tickLine={false} unit=" kg" />
-        <YAxis type="category" dataKey="short" width={78} tick={{ fill: '#cbd5e1', fontSize: 11 }} axisLine={false} tickLine={false} />
-        <Tooltip content={<HwTooltip />} cursor={{ fill: 'rgba(148,163,184,0.08)' }} />
+        <XAxis type="number" tick={{ fill: t.tick, fontSize: t.fs(11) }} axisLine={{ stroke: t.axis }} tickLine={false} unit=" kg" />
+        <YAxis type="category" dataKey="short" width={t.fs(78)} tick={{ fill: t.tickStrong, fontSize: t.fs(11) }} axisLine={false} tickLine={false} />
+        <Tooltip content={<HwTooltip />} cursor={{ fill: t.cursorFill }} />
         <Bar dataKey="co2" radius={[0, 6, 6, 0]} onClick={d => onPick(d.value)} style={{ cursor: 'pointer' }} isAnimationActive={false}>
           {data.map(d => (
-            <Cell key={d.value} fill={d.value === hardware ? '#34d399' : '#334155'} />
+            <Cell key={d.value} fill={d.value === hardware ? t.accent : t.bar} />
           ))}
         </Bar>
       </BarChart>

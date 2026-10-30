@@ -34,10 +34,10 @@ export default function HowItWorks() {
       {STEPS.map((s, i) => (
         <div key={s.title} className="bg-slate-800/40 rounded-xl p-4 min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-            <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] flex items-center justify-center">{i + 1}</span>
+            <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-300 text-[0.6875rem] flex items-center justify-center">{i + 1}</span>
             {s.title}
           </div>
-          <code className="block mt-2 text-[11px] text-cyan-300/90 bg-slate-950/60 rounded-lg px-2.5 py-1.5 overflow-x-auto whitespace-nowrap">{s.formula}</code>
+          <code className="block mt-2 text-[0.6875rem] text-cyan-300/90 bg-slate-950/60 rounded-lg px-2.5 py-1.5 overflow-x-auto whitespace-nowrap">{s.formula}</code>
           <p className="mt-2 text-xs text-slate-400 leading-relaxed">{s.text}</p>
         </div>
       ))}

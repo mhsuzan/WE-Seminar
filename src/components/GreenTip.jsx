@@ -4,7 +4,7 @@ export default function GreenTip({ tip }) {
       <div className="flex items-start gap-3">
         <span className="text-base leading-none mt-0.5 shrink-0" aria-hidden="true">&#128161;</span>
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-emerald-300/80 font-semibold mb-1">Green tip</div>
+          <div className="text-[0.6875rem] uppercase tracking-wider text-emerald-300/80 font-semibold mb-1">Green tip</div>
           <p className="text-sm text-slate-300 leading-relaxed" aria-live="polite">{tip}</p>
         </div>
       </div>

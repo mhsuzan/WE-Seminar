@@ -29,7 +29,7 @@ export default function Metrics({ accuracy, energy, efficiencyScore, co2, equiva
           const t = tone(c.val, c.type)
           return (
             <div key={c.label} className={`bg-slate-900/60 border ${t.ring} rounded-2xl p-4 transition-colors duration-300`}>
-              <div className="text-[11px] text-slate-400 uppercase tracking-wider">{c.label}</div>
+              <div className="text-[0.6875rem] text-slate-400 uppercase tracking-wider">{c.label}</div>
               <div className={`mt-1 text-2xl sm:text-3xl font-bold font-mono tabular-nums ${t.text}`}>
                 <AnimatedNumber value={c.val} decimals={c.decimals} />
                 <span className="text-sm font-normal text-slate-500 ml-1">{c.unit}</span>
@@ -37,7 +37,7 @@ export default function Metrics({ accuracy, energy, efficiencyScore, co2, equiva
               <div className="mt-3 h-1 rounded-full bg-slate-800 overflow-hidden">
                 <div className={`h-full rounded-full ${t.bar} transition-all duration-500`} style={{ width: `${Math.max(2, c.bar)}%` }} />
               </div>
-              <div className="mt-2 text-[11px] text-slate-500 leading-tight truncate" title={c.note}>{c.note}</div>
+              <div className="mt-2 text-[0.6875rem] text-slate-500 leading-tight truncate" title={c.note}>{c.note}</div>
             </div>
           )
         })}

@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme palette. Tailwind's slate + accent colours read these (see tailwind.config.js). */
+:root {
+  --slate-50: 248 250 252;
+  --slate-100: 241 245 249;
+  --slate-200: 226 232 240;
+  --slate-300: 203 213 225;
+  --slate-400: 148 163 184;
+  --slate-500: 100 116 139;
+  --slate-600: 71 85 105;
+  --slate-700: 51 65 85;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --slate-950: 2 6 23;
+
+  --emerald-200: 167 243 208; --emerald-300: 110 231 183; --emerald-400: 52 211 153; --emerald-500: 16 185 129;
+  --emerald-600: 5 150 105; --emerald-700: 4 120 87; --emerald-800: 6 95 70;
+  --amber-200: 253 230 138; --amber-300: 252 211 77; --amber-400: 251 191 36; --amber-500: 245 158 11;
+  --amber-600: 217 119 6; --amber-700: 180 83 9; --amber-800: 146 64 14;
+  --rose-200: 254 205 211; --rose-300: 253 164 175; --rose-400: 251 113 133; --rose-500: 244 63 94;
+  --rose-600: 225 29 72; --rose-700: 190 18 60; --rose-800: 159 18 57;
+  --cyan-200: 165 243 252; --cyan-300: 103 232 249; --cyan-400: 34 211 238; --cyan-500: 6 182 212;
+  --cyan-600: 8 145 178; --cyan-700: 14 116 144; --cyan-800: 21 94 117;
+  --violet-200: 221 214 254; --violet-300: 196 181 253; --violet-400: 167 139 250; --violet-500: 139 92 246;
+  --violet-600: 124 58 237; --violet-700: 109 40 217; --violet-800: 91 33 182;
+  --fuchsia-200: 245 208 254; --fuchsia-300: 240 171 252; --fuchsia-400: 232 121 249; --fuchsia-500: 217 70 239;
+  --fuchsia-600: 192 38 211; --fuchsia-700: 162 28 175; --fuchsia-800: 134 25 143;
+
+  color-scheme: dark;
+}
+
+/* Light theme: flip the slate scale (page → light grey, cards → white, text → dark)
+   and darken accent text shades so they stay readable on white. */
+:root[data-theme="light"] {
+  --slate-50: 2 6 23;
+  --slate-100: 15 23 42;
+  --slate-200: 30 41 59;
+  --slate-300: 51 65 85;
+  --slate-400: 71 85 105;
+  --slate-500: 100 116 139;
+  --slate-600: 148 163 184;
+  --slate-700: 203 213 225;
+  --slate-800: 226 232 240;
+  --slate-900: 255 255 255;
+  --slate-950: 241 245 249;
+
+  --emerald-200: 6 95 70; --emerald-300: 4 120 87; --emerald-400: 5 150 105;
+  --amber-200: 146 64 14; --amber-300: 180 83 9; --amber-400: 217 119 6;
+  --rose-200: 159 18 57; --rose-300: 190 18 60; --rose-400: 225 29 72;
+  --cyan-200: 21 94 117; --cyan-300: 14 116 144; --cyan-400: 8 145 178;
+  --violet-200: 91 33 182; --violet-300: 109 40 217; --violet-400: 124 58 237;
+  --fuchsia-200: 134 25 143; --fuchsia-300: 162 28 175; --fuchsia-400: 192 38 211;
+
+  color-scheme: light;
+}
+
+/* Presenter mode: everything is sized in rem, so this scales the whole page for projectors. */
+:root[data-presenter="on"] {
+  font-size: 19px;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -42,3 +102,36 @@ input[type="range"]:focus-visible::-moz-range-thumb {
 .recharts-wrapper *:focus {
   outline: none;
 }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-rise {
+  animation: rise 220ms ease-out;
+}
+
+/* Printable summary: hidden on screen, the only thing printed. Fixed colours, independent of theme. */
+.print-only { display: none; }
+
+@media print {
+  @page { margin: 14mm; }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+  body { background: #fff !important; }
+}
+
+.rpt { color: #0f172a; font-size: 11pt; line-height: 1.45; }
+.rpt h1 { font-size: 20pt; font-weight: 800; margin: 0; }
+.rpt h2 { font-size: 12pt; font-weight: 700; margin: 18pt 0 6pt; padding-bottom: 3pt; border-bottom: 1.5pt solid #10b981; }
+.rpt .muted { color: #64748b; }
+.rpt p { margin: 6pt 0 0; }
+.rpt .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8pt; }
+.rpt .box { border: 1pt solid #cbd5e1; border-radius: 6pt; padding: 7pt 9pt; }
+.rpt .lbl { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
+.rpt .val { font-size: 14pt; font-weight: 700; font-family: ui-monospace, monospace; }
+.rpt table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+.rpt th, .rpt td { text-align: left; padding: 4pt 6pt; border-bottom: 1pt solid #e2e8f0; }
+.rpt th { font-size: 8pt; text-transform: uppercase; color: #64748b; }
+.rpt .tip { background: #ecfdf5; border-left: 3pt solid #10b981; padding: 7pt 10pt; border-radius: 4pt; }
+.rpt footer { margin-top: 20pt; padding-top: 8pt; border-top: 1pt solid #e2e8f0; display: flex; justify-content: space-between; font-size: 9pt; color: #64748b; }

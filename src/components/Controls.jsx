@@ -25,7 +25,7 @@ function Slider({ id, label, value, display, min, max, step, onChange, left, rig
           className="relative z-10"
         />
       </div>
-      <div className="flex justify-between mt-1.5 text-[11px]">
+      <div className="flex justify-between mt-1.5 text-[0.6875rem]">
         {left}
         {right}
       </div>
@@ -70,6 +70,15 @@ export default function Controls({
           ))}
         </select>
         <p className="text-xs text-slate-500 mt-1.5">{hardwareInfo(hardware).description}</p>
+        {complexity > hardwareInfo(hardware).maxComplexity && (
+          <p className="text-xs text-amber-300 mt-1.5 flex gap-1.5">
+            <span aria-hidden="true">&#9888;</span>
+            <span>
+              A complexity-{complexity} model is too big for {hardwareInfo(hardware).short} to serve in real time
+              (about {hardwareInfo(hardware).maxComplexity} max).
+            </span>
+          </p>
+        )}
       </div>
 
       <div>
@@ -85,7 +94,7 @@ export default function Controls({
           right={<span className="text-rose-400">Coal</span>}
         />
         <div className="mt-3">
-          <p className="text-[11px] text-slate-500 mb-1.5">Or pick a country grid (approx. annual average):</p>
+          <p className="text-[0.6875rem] text-slate-500 mb-1.5">Or pick a country grid (approx. annual average):</p>
           <div className="flex flex-wrap gap-1.5">
             {GRID_REGIONS.map(r => {
               const active = Math.abs(r.value - gridIntensity) < 0.005
@@ -95,7 +104,7 @@ export default function Controls({
                   type="button"
                   onClick={() => setGridIntensity(r.value)}
                   title={`${r.value} kg CO₂/kWh`}
-                  className={`px-2 py-1 rounded-lg text-[11px] transition-colors ${
+                  className={`px-2 py-1 rounded-lg text-[0.6875rem] transition-colors ${
                     active
                       ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
                       : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'

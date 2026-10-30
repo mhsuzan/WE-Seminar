@@ -27,6 +27,17 @@ It's not a simulator of any *specific* model — it's more of a generalized mode
 - **Yearly footprint** — annual energy, CO₂, cost and the number of trees needed to offset it, based on daily usage.
 - **Compare scenarios** — pin up to 4 configurations (saved in the browser); they show on the trade-off chart and in a side-by-side table with the best value per row highlighted.
 - **How the model works** — the formulas behind every number.
+- **Greenest setup finder** — set the accuracy you need; it searches every chip, model size and grid (respecting each chip's real-time capacity) for the lowest CO₂ or cost.
+- **Time of day** — illustrative hourly grid curve; pick when the workload runs and shift it to the cleanest window.
+- **Training vs usage** — one-off training CO₂ vs ongoing usage, and when usage overtakes it.
+- **Everyday equivalents** — yearly CO₂ as flights, homes powered, car km and phone charges.
+
+## Presenting
+
+- **Guided tour** — 8-step walkthrough that drives the controls; ← → keys, Esc to close.
+- **Quiz** — 5 "which emits more?" questions for the audience, answers computed live.
+- **Presenter mode** — scales the whole page up for projectors.
+- **Light / dark theme** and **Print summary** (one-page report, or save as PDF).
 
 ## Presets
 
@@ -41,7 +52,7 @@ There are a few presets if you want a quick starting point:
 
 ## URL sharing
 
-The dashboard syncs all parameters to the URL query string (?c=30&h=cpu&g=0.50&u=8) so you can share a specific configuration just by sending someone a link. Browser back/forward also works.
+The dashboard syncs all parameters to the URL query string (?c=30&h=cpu&g=0.50&u=8&s=9) so you can share a specific configuration just by sending someone a link. Browser back/forward also works.
 
 ## Running locally
 
@@ -77,4 +88,4 @@ npm install
 npm run build
 ```
 
-Then restart nginx and you're live.
+No restart needed. The nginx container bind-mounts the `dist/` directory itself, so always rebuild *into* it (as above) or `rsync --delete` a new build into it. Never rename or replace the `dist/` directory: the container keeps serving the old one.

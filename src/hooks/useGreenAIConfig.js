@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { calcEverything, hardwareInfo, HARDWARE_OPTIONS, GRID_MIN, GRID_MAX } from '../utils/calculations'
 
-const DEFAULTS = { complexity: 30, hardware: 'cpu', gridIntensity: 0.5, hoursPerDay: 8 }
+const DEFAULTS = { complexity: 30, hardware: 'cpu', gridIntensity: 0.5, hoursPerDay: 8, startHour: 9 }
 
 function readParams() {
   if (typeof window === 'undefined') return DEFAULTS
@@ -9,11 +9,13 @@ function readParams() {
   const h = p.get('h')
   const g = parseFloat(p.get('g'))
   const u = parseInt(p.get('u'))
+  const st = parseInt(p.get('s'))
   return {
     complexity: Math.min(100, Math.max(1, parseInt(p.get('c')) || DEFAULTS.complexity)),
     hardware: HARDWARE_OPTIONS.some(o => o.value === h) ? h : DEFAULTS.hardware,
     gridIntensity: Number.isFinite(g) ? Math.min(GRID_MAX, Math.max(GRID_MIN, g)) : DEFAULTS.gridIntensity,
     hoursPerDay: Number.isFinite(u) ? Math.min(24, Math.max(1, u)) : DEFAULTS.hoursPerDay,
+    startHour: Number.isFinite(st) ? ((st % 24) + 24) % 24 : DEFAULTS.startHour,
   }
 }
 
@@ -30,6 +32,7 @@ export default function useGreenAIConfig() {
   const [hardware, setHardware] = useState(initial.hardware)
   const [gridIntensity, setGridIntensity] = useState(initial.gridIntensity)
   const [hoursPerDay, setHoursPerDay] = useState(initial.hoursPerDay)
+  const [startHour, setStartHour] = useState(initial.startHour)
   const syncing = useRef(false)
 
   const hardwareFactor = hardwareInfo(hardware).factor
@@ -43,6 +46,8 @@ export default function useGreenAIConfig() {
     setComplexity(preset.complexity)
     setHardware(preset.hardware)
     setGridIntensity(preset.gridIntensity)
+    if (preset.hoursPerDay) setHoursPerDay(preset.hoursPerDay)
+    if (preset.startHour != null) setStartHour(preset.startHour)
   }, [])
 
   const reset = useCallback(() => {
@@ -50,6 +55,7 @@ export default function useGreenAIConfig() {
     setHardware(DEFAULTS.hardware)
     setGridIntensity(DEFAULTS.gridIntensity)
     setHoursPerDay(DEFAULTS.hoursPerDay)
+    setStartHour(DEFAULTS.startHour)
   }, [])
 
   useEffect(() => {
@@ -59,12 +65,13 @@ export default function useGreenAIConfig() {
     p.set('h', hardware)
     p.set('g', gridIntensity.toFixed(2))
     p.set('u', hoursPerDay)
+    p.set('s', startHour)
     const qs = p.toString()
     const cur = window.location.search.replace('?', '')
     if (cur !== qs) {
       window.history.replaceState(null, '', `?${qs}`)
     }
-  }, [complexity, hardware, gridIntensity, hoursPerDay])
+  }, [complexity, hardware, gridIntensity, hoursPerDay, startHour])
 
   useEffect(() => {
     function onPop() {
@@ -74,6 +81,7 @@ export default function useGreenAIConfig() {
       setHardware(p.hardware)
       setGridIntensity(p.gridIntensity)
       setHoursPerDay(p.hoursPerDay)
+      setStartHour(p.startHour)
       syncing.current = false
     }
     window.addEventListener('popstate', onPop)
@@ -85,6 +93,7 @@ export default function useGreenAIConfig() {
     hardware, setHardware,
     gridIntensity, setGridIntensity,
     hoursPerDay, setHoursPerDay,
+    startHour, setStartHour,
     hardwareFactor, applyPreset, reset,
     ...metrics,
   }
